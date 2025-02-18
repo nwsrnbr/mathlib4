@@ -1,12 +1,12 @@
-import Mathlib.Data.Real.Basic
+import Mathlib.Data.Real.basic
 import Mathlib.LinearAlgebra.Matrix.Determinant
 
--- 基底は b1 := (1 / √2) [1, 1] と b2 := (1 / √2) [1, -1].
--- Hyperbolic は a * b1 + b * b2 と書いたときの a と b の組たちの集合．
+-- 基底は b1 := [1, 0] と b2 := [0, 1].
+-- Hyperbolic は s1 * b1 + s2 * b2 と書いたときの s1 と s2 の組たちの集合．
 @[ext]
 structure Hyperbolic where
-  a : ℤ
-  b : ℤ
+  s1 : ℤ
+  s2 : ℤ
 
 namespace Hyperbolic
 
@@ -20,42 +20,42 @@ instance : Zero Hyperbolic :=
   ⟨0, 0⟩
 
 instance : Add Hyperbolic :=
-  ⟨fun x y ↦ ⟨x.a + y.a, x.b + y.b⟩⟩
+  ⟨fun x y ↦ ⟨x.s1 + y.s1, x.s2 + y.s2⟩⟩
 
 instance : Neg Hyperbolic :=
-  ⟨fun x ↦ ⟨-x.a, -x.b⟩⟩
+  ⟨fun x ↦ ⟨-x.s1, -x.s2⟩⟩
 
 theorem zero_def : (0 : Hyperbolic) = ⟨0, 0⟩ :=
   rfl
 
-theorem add_def (x y : Hyperbolic) : x + y = ⟨x.a + y.a, x.b + y.b⟩ :=
+theorem add_def (x y : Hyperbolic) : x + y = ⟨x.s1 + y.s1, x.s2 + y.s2⟩ :=
   rfl
 
-theorem neg_def (x : Hyperbolic) : -x = ⟨-x.a, -x.b⟩ :=
-  rfl
-
-@[simp]
-theorem zero_a : (0 : Hyperbolic).a = 0 :=
+theorem neg_def (x : Hyperbolic) : -x = ⟨-x.s1, -x.s2⟩ :=
   rfl
 
 @[simp]
-theorem zero_b : (0 : Hyperbolic).b = 0 :=
+theorem zero_s1 : (0 : Hyperbolic).s1 = 0 :=
   rfl
 
 @[simp]
-theorem add_a (x y : Hyperbolic) : (x + y).a = x.a + y.a :=
+theorem zero_s2 : (0 : Hyperbolic).s2 = 0 :=
   rfl
 
 @[simp]
-theorem add_b (x y : Hyperbolic) : (x + y).b = x.b + y.b :=
+theorem add_s1 (x y : Hyperbolic) : (x + y).s1 = x.s1 + y.s1 :=
   rfl
 
 @[simp]
-theorem neg_a (x : Hyperbolic) : (-x).a = -x.a :=
+theorem add_s2 (x y : Hyperbolic) : (x + y).s2 = x.s2 + y.s2 :=
   rfl
 
 @[simp]
-theorem neg_b (x : Hyperbolic) : (-x).b = -x.b :=
+theorem neg_s1 (x : Hyperbolic) : (-x).s1 = -x.s1 :=
+  rfl
+
+@[simp]
+theorem neg_s2 (x : Hyperbolic) : (-x).s2 = -x.s2 :=
   rfl
 
 instance is_AddCommGroup : AddCommGroup Hyperbolic where
@@ -77,8 +77,8 @@ instance is_AddCommGroup : AddCommGroup Hyperbolic where
   add_comm := by
     intros
     ext <;> simp <;> ring
-  nsmul := fun n x => ⟨n * x.a, n * x.b⟩
-  zsmul := fun n x => ⟨n * x.a, n * x.b⟩
+  nsmul := fun n x => ⟨n * x.s1, n * x.s2⟩
+  zsmul := fun n x => ⟨n * x.s1, n * x.s2⟩
   nsmul_zero := by
     intros
     ext <;> simp
@@ -95,10 +95,8 @@ instance is_AddCommGroup : AddCommGroup Hyperbolic where
     intros
     ext <;> simp [Int.negSucc_coe] <;> ring
 
--- 内積は (第1成分同士の積) - (第2成分同士の積).
--- 基底は共に (1 / √2) が係数にあるので，最後に / 2 されることに注意．
 noncomputable def inner (x y : Hyperbolic) : ℝ :=
-  ((x.a + x.b) * (y.a + y.b) - (x.a - x.b) * (y.a - y.b)) / 2
+  x.s1 * y.s2 + x.s2 * y.s1
 
 noncomputable def norm (x : Hyperbolic) : ℝ := inner x x
 
@@ -114,7 +112,7 @@ theorem is_even : ∀ x : Hyperbolic, ∃ n : ℤ, norm x = 2 * n := by
   intro x
   rw [norm, inner]
   ring_nf
-  use x.a * x.b
+  use x.s1 * x.s2
   simp
 
 theorem is_unimodular : (Gram_matrix).det = 1 ∨ (Gram_matrix).det = -1 := by
