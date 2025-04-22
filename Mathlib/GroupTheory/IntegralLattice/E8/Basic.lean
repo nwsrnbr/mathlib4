@@ -5,11 +5,14 @@ Authors: Erik van der Plas
 2025-02-26 10:09:13
 E8 格子のために借用
 -/
+
+import Mathlib.Data.Matrix.Basic
 import Mathlib.GroupTheory.IntegralLattice.Equiv
 import Mathlib.LinearAlgebra.Dimension.Finrank
 import Mathlib.LinearAlgebra.Matrix.BilinearForm
+import Mathlib.LinearAlgebra.Matrix.Block
+import Mathlib.LinearAlgebra.Matrix.Determinant
 import Mathlib.Algebra.Lie.CartanMatrix
-
 
 universe u
 
@@ -35,35 +38,140 @@ theorem unique (Λ₁ Λ₂ : Type*) [E8Lattice Λ₁] [E8Lattice Λ₂]:
 
 def B := Matrix.toBilin' CartanMatrix.E₈
 
-/- CartanMatrix.E₈ は以下の行列：
-  Matrix.of
-  ![![ 2,  0, -1,  0,  0,  0,  0,  0],
-    ![ 0,  2,  0, -1,  0,  0,  0,  0],
-    ![-1,  0,  2, -1,  0,  0,  0,  0],
-    ![ 0, -1, -1,  2, -1,  0,  0,  0],
-    ![ 0,  0,  0, -1,  2, -1,  0,  0],
-    ![ 0,  0,  0,  0, -1,  2, -1,  0],
-    ![ 0,  0,  0,  0,  0, -1,  2, -1],
-    ![ 0,  0,  0,  0,  0,  0, -1,  2]]
+def intMatrixToRat {m n : ℕ} (A : Matrix (Fin m) (Fin n) ℤ) : Matrix (Fin m) (Fin n) ℚ :=
+  A.map (↑)
+
+lemma intDetToRat {n : ℕ} (A : Matrix (Fin n) (Fin n) ℤ) : A.det = (intMatrixToRat A).det := by
+  exact RingHom.map_det (Int.castRingHom ℚ) A
+
+-- Matrix.updateRow M i b は M の i 行目を b に置き換えた行列( i = 0, 1, ... に注意)
+def M0  := CartanMatrix.E₈
+def M1  := Matrix.updateRow M0  2 ((2 : ℤ) • M0 2)
+def M1' := Matrix.updateRow M1  2 (M1 2 + (1 : ℤ) • M1 0)
+def M2  := Matrix.updateRow M1' 3 ((2 : ℤ) • M1' 3)
+def M2' := Matrix.updateRow M2  3 (M2 3 + (1 : ℤ) • M2 1)
+def M3  := Matrix.updateRow M2' 3 ((3 : ℤ) • M2' 3)
+def M3' := Matrix.updateRow M3  3 (M3 3 + (2 : ℤ) • M3 2)
+def M4  := Matrix.updateRow M3' 4 ((5 : ℤ) • M3' 4)
+def M4' := Matrix.updateRow M4  4 (M4 4 + (1 : ℤ) • M4 3)
+def M5  := Matrix.updateRow M4' 5 ((4 : ℤ) • M4' 5)
+def M5' := Matrix.updateRow M5  5 (M5 5 + (1 : ℤ) • M5 4)
+def M6  := Matrix.updateRow M5' 6 ((3 : ℤ) • M5' 6)
+def M6' := Matrix.updateRow M6  6 (M6 6 + (1 : ℤ) • M6 5)
+def M7  := Matrix.updateRow M6' 7 ((2 : ℤ) • M6' 7)
+def M7' := Matrix.updateRow M7  7 (M7 7 + (1 : ℤ) • M7 6)
+
+/-
+def M4 := Matrix.updateRow M3 4 (M3 4 + (6/5 : ℚ) • M3 3)
+def M5 := Matrix.updateRow M4 5 (M4 5 + (5/4 : ℚ) • M4 4)
+def M6 := Matrix.updateRow M5 6 (M5 6 + (4/3 : ℚ) • M5 5)
+def M7 := Matrix.updateRow M6 7 (M6 7 + (3/2 : ℚ) • M6 6)
 -/
 
-/- CartanMatrix.E₈ を上三角になるよう基本変形：
-  Matrix.of
-  ![![ 2,  0, -1,  0,  0,  0,  0,  0],
-    ![ 0,  2,  0, -1,  0,  0,  0,  0],
-    ![ 0,  0,3/2, -1,  0,  0,  0,  0],
-    ![ 0,  0,  0,5/6, -1,  0,  0,  0],
-    ![ 0,  0,  0,  0,4/5, -1,  0,  0],
-    ![ 0,  0,  0,  0,  0,3/4, -1,  0],
-    ![ 0,  0,  0,  0,  0,  0,2/3, -1],
-    ![ 0,  0,  0,  0,  0,  0,  0,1/2]]
--/
+#eval M0
+#eval M1
+#eval M1'
+#eval M2
+#eval M2'
+#eval M3
+#eval M3'
+#eval M4
+#eval M4'
+#eval M5
+#eval M5'
+#eval M6
+#eval M6'
+#eval M7
+#eval M7'
 
-#eval 2 * 2 * 3/2 * 5/6 * 4/5 * 3/4 * 2/3 * 1/2 -- = 1
+def M7_A : Matrix (Fin 4) (Fin 4) ℚ :=
+  !![2, 0, -1, 0;
+   0, 2, 0, -1;
+   0, 0, (3 : Rat)/2, -1;
+   0, 0, 0, (5 : Rat)/6]
 
-lemma cartan_det : (CartanMatrix.E₈).det = 1 := by
-  sorry
+def M7_B : Matrix (Fin 4) (Fin 4) ℚ :=
+  !![0, 0, 0, 0;
+   0, 0, 0, 0;
+   0, 0, 0, 0;
+   -1, 0, 0, 0]
 
+def M7_D : Matrix (Fin 4) (Fin 4) ℚ :=
+  !![(4 : Rat)/5, -1, 0, 0;
+   0, (3 : Rat)/4, -1, 0;
+   0, 0, (2 : Rat)/3, -1;
+   0, 0, 0, (1 : Rat)/2]
+
+example : (Matrix.fromBlocks M7_A M7_B 0 M7_D).det = M7_A.det * M7_D.det := by
+  rw [Matrix.det_fromBlocks_zero₂₁]
+
+lemma M7'_upperTrianglar : Matrix.BlockTriangular M7' id := by
+  rw [Matrix.BlockTriangular]
+  intro i j hij
+  fin_cases i
+  <;> fin_cases j
+  <;> simp at *
+  repeat'
+    rfl
+
+-- Matrix.det_of_upperTriangular でエラーが出る
+lemma M7'_det : M7'.det = 1440 := by
+  rw [Matrix.det_of_upperTriangular M7'_upperTrianglar]
+  calc
+    _ = M7' 0 0 * M7' 1 1 * M7' 2 2 * M7' 3 3 * M7' 4 4 * M7' 5 5 * M7' 6 6 * M7' 7 7 := by rfl
+    _ = 2 * 2 * 3 * 5 * 4 * 3 * 2 * 1 := by congr
+    _ = 1440 := by norm_num
+
+-- Matrix.det_updateRow_add_smul_self でエラーが出る
+theorem E8_det : (CartanMatrix.E₈).det = 1 := by
+  rw [← mul_right_inj' (a := 1440) (by norm_num), mul_one]
+  calc
+    _ = 1440 * M0.det := by
+      rw [M0]
+    _ = 720 * M1.det := by
+      rw [M1, Matrix.det_updateRow_smul, ← mul_assoc]
+      simp
+    _ = 720 * M1'.det := by
+      rw [M1', Matrix.det_updateRow_add_smul_self]
+      decide
+    _ = 360 * M2.det := by
+      rw [M2, Matrix.det_updateRow_smul, ← mul_assoc]
+      simp
+    _ = 360 * M2'.det := by
+      rw [M2', Matrix.det_updateRow_add_smul_self]
+      decide
+    _ = 120 * M3.det := by
+      rw [M3, Matrix.det_updateRow_smul, ← mul_assoc]
+      simp
+    _ = 120 * M3'.det := by
+      rw [M3', Matrix.det_updateRow_add_smul_self]
+      decide
+    _ = 24 * M4.det := by
+      rw [M4, Matrix.det_updateRow_smul, ← mul_assoc]
+      simp
+    _ = 24 * M4'.det := by
+      rw [M4', Matrix.det_updateRow_add_smul_self]
+      decide
+    _ = 6 * M5.det := by
+      rw [M5, Matrix.det_updateRow_smul, ← mul_assoc]
+      simp
+    _ = 6 * M5'.det := by
+      rw [M5', Matrix.det_updateRow_add_smul_self]
+      decide
+    _ = 2 * M6.det := by
+      rw [M6, Matrix.det_updateRow_smul, ← mul_assoc]
+      simp
+    _ = 2 * M6'.det := by
+      rw [M6', Matrix.det_updateRow_add_smul_self]
+      decide
+    _ = 1 * M7.det := by
+      rw [M7, Matrix.det_updateRow_smul, ← mul_assoc]
+      simp
+    _ = 1 * M7'.det := by
+      rw [M7', Matrix.det_updateRow_add_smul_self]
+      decide
+    _ = 1440 := by
+      sorry
 
 -- 自身との bilinear form を具体的に計算．
 lemma inner_self_calc (x : Fin 8 → ℤ) : (B x) x =
